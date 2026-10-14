@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdMute Smart Mic Test</title>
+<style>
+body{background:#101827;color:white;text-align:center;font-family:Arial;padding:35px}
+button{background:#36cb91;border:0;border-radius:12px;padding:18px;font-size:20px}
+.track{background:#344054;border-radius:8px;margin-top:20px}
+#meter{height:28px;background:#36cb91;width:0%;border-radius:8px}
+</style>
+</head>
+<body>
+<h2>AdMute Smart</h2>
+<p>iPhone Microphone Test</p>
+<button id="start">Start Microphone</button>
+<p id="status">Microphone not started</p>
+<div class="track"><div id="meter"></div></div>
+<script>
+document.getElementById('start').onclick=async()=>{
+try{
+const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+const ctx=new AudioContext();
+await ctx.resume();
+const src=ctx.createMediaStreamSource(stream);
+const analyser=ctx.createAnalyser();
+src.connect(analyser);
+const data=new Uint8Array(analyser.fftSize);
+document.getElementById('status').textContent='Microphone active';
+function update(){
+analyser.getByteTimeDomainData(data);
+let sum=0;
+for(const x of data)sum+=((x-128)/128)**2;
+document.getElementById('meter').style.width=Math.min(100,Math.sqrt(sum/data.length)*400)+'%';
+requestAnimationFrame(update);
+}
+update();
+}catch(e){
+document.getElementById('status').textContent='Error: '+e.message;
+}
+};
+</script>
+</body>
+</html>
